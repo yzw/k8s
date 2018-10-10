@@ -1,0 +1,79 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      serviceAccountName: prometheus
+      containers:
+        - name: alertmanager 
+          image: prom/alertmanager:v0.14.0
+          args:
+            - "--config.file=/etc/prometheus/alertmanager.yml"
+          ports:
+            - containerPort: 9093
+          volumeMounts:
+          - name: prometheus-config-volume
+            mountPath: /etc/prometheus/
+          - name: tz-config
+            mountPath: /etc/localtime
+      volumes:
+      - name: prometheus-config-volume
+        configMap:
+          defaultMode: 420
+          name: alertmanager
+      - name: tz-config
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitor
+spec:
+  selector:
+    app: alertmanager
+  ports:
+    - name: http
+      port: 9093
+      targetPort: 9093
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager
+  labels:
+    name: alertmanager
+  namespace: monitor
+data:
+  alertmanager.yml: |-
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: webhook
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 30m
+      group_by: [alertname]
+      routes:
+      - receiver: webhook
+        group_wait: 10s
+        match:
+          team: node
+    receivers:
+    - name: webhook
+      webhook_configs:
+      - url: http://alert-forward:9100
+        send_resolved: true

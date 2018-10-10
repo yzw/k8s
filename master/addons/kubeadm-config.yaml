@@ -1,0 +1,36 @@
+apiVersion: v1
+data:
+  ClusterConfiguration: |
+    apiServerExtraArgs:
+      authorization-mode: Node,RBAC
+    apiVersion: kubeadm.k8s.io/v1alpha3
+    auditPolicy:
+      logDir: /var/log/kubernetes/audit
+      logMaxAge: 2
+      path: ""
+    certificatesDir: /etc/kubernetes/pki
+    clusterName: kubernetes
+    controlPlaneEndpoint: ""
+    etcd:
+      local:
+        dataDir: /var/lib/etcd
+        image: ""
+    imageRepository: k8s.gcr.io
+    kind: ClusterConfiguration
+    kubernetesVersion: v1.12.0
+    networking:
+      dnsDomain: cluster.local
+      podSubnet: 100.0.0.0/8
+      serviceSubnet: 10.96.0.0/12
+    unifiedControlPlaneImage: ""
+  ClusterStatus: |
+    apiEndpoints:
+      ubuntu:
+        advertiseAddress: 0.0.0.0
+        bindPort: 6443
+    apiVersion: kubeadm.k8s.io/v1alpha3
+    kind: ClusterStatus
+kind: ConfigMap
+metadata:
+  name: kubeadm-config
+  namespace: kube-system

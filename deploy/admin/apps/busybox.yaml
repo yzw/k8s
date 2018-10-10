@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/node: ""
+      containers:
+        - name: count
+          image: busybox:1.29
+          args: [/bin/sh, -c,
+                  'i=0; while true; do echo "$i: $(date)"; i=$((i+1)); sleep 1; done']
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: tz-config
+              mountPath: /etc/localtime
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 223.5.5.5
+          - 223.6.6.6
+      volumes:
+        - name: tz-config
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai

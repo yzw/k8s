@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  creationTimestamp: null
+  labels:
+    component: kube-apiserver
+    tier: control-plane
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --enable-bootstrap-token-auth=true
+    - --allow-privileged=true
+    - --requestheader-extra-headers-prefix=X-Remote-Extra-
+    - --requestheader-group-headers=X-Remote-Group
+    - --requestheader-username-headers=X-Remote-User
+    - --secure-port=6443
+    - --insecure-bind-address={{PRIVATE_IP}}
+    - --insecure-port=0
+    - --advertise-address={{PUBLIC_IP}}
+    - --requestheader-client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --proxy-client-cert-file=/etc/kubernetes/pki/admin.crt
+    - --proxy-client-key-file=/etc/kubernetes/pki/admin.key
+    - --client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    - --kubelet-client-certificate=/etc/kubernetes/pki/admin.crt
+    - --kubelet-client-key=/etc/kubernetes/pki/admin.key
+    - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+    - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+    - --service-cluster-ip-range=10.96.0.0/12
+    - --disable-admission-plugins=PersistentVolumeLabel
+    - --enable-admission-plugins=NodeRestriction
+    - --authorization-mode=Node,RBAC
+    - --etcd-servers=https://{{PRIVATE_IP}}:2379
+    - --etcd-cafile=/etc/kubernetes/pki/ca.crt
+    - --etcd-certfile=/etc/kubernetes/pki/apiserver.crt
+    - --etcd-keyfile=/etc/kubernetes/pki/apiserver.key
+    image: k8s.gcr.io/kube-apiserver:v1.12.0
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: {{PUBLIC_IP}}
+        path: /healthz
+        port: 6443
+        scheme: HTTPS
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    name: kube-apiserver
+    resources:
+      requests:
+        cpu: 250m
+    volumeMounts:
+    - mountPath: /etc/kubernetes/pki
+      name: k8s-certs
+      readOnly: true
+    - mountPath: /etc/ssl/certs
+      name: ca-certs
+      readOnly: true
+    - mountPath: /etc/pki
+      name: ca-certs-etc-pki
+      readOnly: true
+    - name: tz-config
+      mountPath: /etc/localtime
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/pki
+      type: DirectoryOrCreate
+    name: k8s-certs
+  - hostPath:
+      path: /etc/ssl/certs
+      type: DirectoryOrCreate
+    name: ca-certs
+  - hostPath:
+      path: /etc/pki
+      type: DirectoryOrCreate
+    name: ca-certs-etc-pki
+  - name: tz-config
+    hostPath:
+      path: /usr/share/zoneinfo/Asia/Shanghai
+status: {}
