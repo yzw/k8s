@@ -111,6 +111,8 @@ spec:
         - /etc/kube-flannel/cni-conf.json
         - /etc/cni/net.d/10-flannel.conflist
         volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
         - name: cni
           mountPath: /etc/cni/net.d
         - name: flannel-cfg
@@ -143,11 +145,16 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
         - name: run
           mountPath: /run
         - name: flannel-cfg
           mountPath: /etc/kube-flannel/
       volumes:
+        - name: tz-config
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
         - name: run
           hostPath:
             path: /run
