@@ -96,9 +96,9 @@ spec:
     spec:
       hostNetwork: true
       tolerations:
-      - key: node-role.kubernetes.io/master
+      - key: CriticalAddonsOnly
         operator: Exists
-        effect: NoSchedule
+      - operator: Exists
       serviceAccountName: flannel
       initContainers:
       - name: install-cni
