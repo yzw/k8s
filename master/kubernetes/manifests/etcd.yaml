@@ -37,7 +37,7 @@ spec:
         command:
         - /bin/sh
         - -ec
-        - ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/ca.crt --endpoints=https://[{{PRIVATE_IP}}]:2379
+        - ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/ca.crt --endpoints={{PRIVATE_IP}}:2379
           --cert=/etc/kubernetes/pki/apiserver.crt --key=/etc/kubernetes/pki/apiserver.key
           get foo
       failureThreshold: 8
